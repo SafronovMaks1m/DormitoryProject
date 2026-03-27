@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+migrations/__pycache__/
+migrations/versions/__pycache__/
+.vscode/
+.idea/

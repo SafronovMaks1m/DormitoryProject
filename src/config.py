@@ -1,0 +1,13 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+NAME_DB = os.getenv("NAME_DB")
+NAME_USER = os.getenv("NAME_USER")
+PASSWORD_USER_DB = os.getenv("PASSWORD_USER_DB")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
+APPLICATION_PASSWORD = os.getenv("APPLICATION_PASSWORD")
+ALGORITHM = "HS256"
