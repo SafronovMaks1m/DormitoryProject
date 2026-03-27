@@ -6,3 +6,4 @@ migrations/__pycache__/
 migrations/versions/__pycache__/
 .vscode/
 .idea/
+src/helper.py
