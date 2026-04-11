@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from src.models.users import Users as UsersModel
+from src.models.rooms import Rooms
 from src.schemas.UserSchema import User as UserSchema, UserCreate
 from src.database.db_depends import get_async_db
 from src.auth.auth import get_current_admin
@@ -20,10 +21,12 @@ async def create_user(user: UserCreate, bg: BackgroundTasks,
     result = await db.scalar(select(UsersModel).where(UsersModel.email == user.email))
     if result:
         raise HTTPException(status_code=400, detail="User already exists")
-
+    db_room = await db.scalar(select(Rooms).where(Rooms.number == user.room_number))
+    if db_room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no such room")
     db_user = UsersModel(
         name=user.name,
-        room_number=user.room_number,
+        room_id = db_room.id,
         email=user.email
     )
     db.add(db_user)

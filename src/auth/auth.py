@@ -40,16 +40,12 @@ async def get_current_session(token: str = Depends(access_token),
         if session_id is None:
             raise credentials_exception
     except jwt.ExpiredSignatureError:
-        print("----------------------------------------------------------")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired"
         )
     except jwt.PyJWTError as e:
-        print("----------------------------------------------------------")
-        print(f"Ошибка: {e}")
         raise credentials_exception
-    print("----------------------------------------------------------")
     session = await db.scalar(select(Sessions).options(joinedload(Sessions.user)).where(Sessions.id == session_id))
     if session is None or session.revoked or not session.is_active or not session.user.is_active:
         raise credentials_exception

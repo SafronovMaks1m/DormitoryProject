@@ -1,0 +1,2 @@
+class GeneratingValuesSensorsException(Exception):
+    pass

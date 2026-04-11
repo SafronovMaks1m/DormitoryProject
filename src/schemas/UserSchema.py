@@ -5,7 +5,7 @@ class UserCreate(BaseModel):
     Модель для создания пользователя
     """
     name: str = Field(pattern="^[A-Za-zА-Яа-яЁё]+([ -][A-Za-zА-Яа-яЁё]+)*$", description="имя пользователя")
-    room_number: int = Field(description="Номер комнаты")
+    room_number: int = Field(gt=0, description="Номер комнаты")
     email: EmailStr = Field(description="Email пользователя")
 
 
