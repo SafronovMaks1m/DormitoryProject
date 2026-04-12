@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.sessions import Sessions
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from src.database.connect_db import async_session_maker
 
 access_token = APIKeyCookie(name="access_token", auto_error=False)
 refresh_cookie = APIKeyCookie(name="refresh_token", auto_error=False)
@@ -56,14 +57,28 @@ async def get_current_session(token: str = Depends(access_token),
         )
     return session
 
-async def get_current_session_optional(
-                token: str = Depends(access_token),
-                db: AsyncSession = Depends(get_async_db)):
+async def get_current_session_optional(token: str = Depends(access_token), db: AsyncSession = Depends(get_async_db)):
     try:
         return await get_current_session(token, db)
     except HTTPException:
         return None
 
+async def get_user_for_socket(token: str = Depends(access_token)):
+    async with async_session_maker() as db:
+        try:
+            session = await get_current_session(token=token, db=db)
+            return session.user
+        except HTTPException:
+            return None
+
+async def get_current_admin_for_socket(current_user: Users | None = Depends(get_user_for_socket)):
+    """
+    Проверяет, что пользователь имеет роль 'admin' в вебсокете.
+    """
+    if current_user is not None and current_user.role == "admin":
+        return current_user
+    return None
+    
 async def get_current_user(current_session: Sessions = Depends(get_current_session)):
     """
     Проверяет JWT и возвращает пользователя из базы.
@@ -82,7 +97,6 @@ async def get_current_admin(current_user: Users = Depends(get_current_user)):
     """
     Проверяет, что пользователь имеет роль 'admin'.
     """
-    print(current_user, "------------------------------")
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Admin can perform this action")
     return current_user

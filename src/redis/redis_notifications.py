@@ -15,12 +15,9 @@ class RedisNotifications:
             raise RedisNotificationsException("Please use the context manager")
         return self._redis
     
-    async def publish(self, num_room: int, message: dict):
+    async def publish(self, room_id: int, message: dict):
         message_json = json.dumps(message)
-        await self.redis.publish(num_room, message_json)
-    
-    def subscribe(self):
-        return self.redis.pubsub()
+        await self.redis.publish(f"room:{room_id}", message_json)
         
     async def __aenter__(self):
         self._redis = Redis(self.host, self.port, self.db)

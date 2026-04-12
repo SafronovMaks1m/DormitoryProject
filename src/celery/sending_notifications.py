@@ -28,14 +28,15 @@ async def _send_notifi():
             result: dict = obj.generation()
             for key, value in result.get('violations').items():
                 for user in all_users:
-                    violation = SensorViolations(
+                    new_violation = SensorViolations(
                         user_id = user.id,
                         sensor_id = sens[key],
                         exceeded_value = value
                     )
-                    db.add(violation)
+                    db.add(new_violation)
+                    await db.flush(0)
             await db.commit()
-            await connection.publish(f"room:{room.number}", result)
+            await connection.publish(room.id, result)
 
 @celery.task(queue="notifications")
 def send_notifi():
