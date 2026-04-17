@@ -1,10 +1,10 @@
 import json
 from fastapi import WebSocket, status
 from starlette.websockets import WebSocketDisconnect
-from src.redis.redis_notifications import RedisNotifications
+from src.redis.async_redis_notifications import AsyncRedisNotifications
 
 async def handle_redis_pubsub(websocket: WebSocket, channel: str, user_id: int, is_pattern: bool = False):
-    async with RedisNotifications() as connection:
+    async with AsyncRedisNotifications() as connection:
         async with connection.redis.pubsub() as pubsub:
             if is_pattern:
                 await pubsub.psubscribe(channel)

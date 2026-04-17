@@ -2,9 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.password_setup_token import PasswordSetupToken
 from src.models.users import Users
 from datetime import datetime, timezone, timedelta
-from src.config import APPLICATION_PASSWORD
+from src.config import APPLICATION_PASSWORD_GMAIL
 from email.message import EmailMessage
-import aiosmtplib
+import smtplib
 import secrets, hashlib
 
 class SendToken:
@@ -22,12 +22,12 @@ class SendToken:
         db_passwod_token = PasswordSetupToken(
             hash_token = hashed,
             expires_at = time,
-            user = user
+            user_id = user.id
         )
         return {"instance": db_passwod_token, "token": token}
     
     @classmethod
-    async def send_token_email(cls, email: str, token: str):
+    def send_token_email(cls, email: str, token: str):
         msg = EmailMessage()
         msg["From"] = "safranov01@gmail.com"
         msg["To"] = email
@@ -35,11 +35,7 @@ class SendToken:
         msg["Subject"] = text
         msg.set_content(f"{url}{token}")
         
-        await aiosmtplib.send(
-            msg,
-            hostname="smtp.gmail.com",
-            port=587,
-            start_tls=True,
-            username="safranov01@gmail.com",
-            password=APPLICATION_PASSWORD
-        )
+        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+            smtp.starttls()
+            smtp.login("safranov01@gmail.com", APPLICATION_PASSWORD_GMAIL)
+            smtp.send_message(msg)

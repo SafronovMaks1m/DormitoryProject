@@ -1,9 +1,9 @@
 from celery import Celery
+from src.celery.bg_tasks import send_messages, send_notifi
 
 celery = Celery(
     "init_celery",
-    broker='amqp://guest:guest@localhost:5672/',
-    
+    broker='amqp://guest:guest@localhost:5672/'
 )
 
 celery.conf.update(
@@ -13,7 +13,7 @@ celery.conf.update(
 
 celery.conf.beat_schedule = {
     'run-me-background-task': {
-        'task': 'sending_notifications.send_notifi',
+        'task': 'src.celery.bg_tasks.send_notifi',
         'schedule': 60.0,
     }
 }

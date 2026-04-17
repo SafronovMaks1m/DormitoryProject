@@ -1,8 +1,8 @@
-from redis import Redis
+from redis.asyncio import Redis
 from .RedisNotificationsException import RedisNotificationsException
 import json
 
-class RedisNotifications:
+class AsyncRedisNotifications:
     def __init__(self, host='127.0.0.1', port=6379, db=0): 
         self.host = host
         self.port = port
@@ -15,15 +15,15 @@ class RedisNotifications:
             raise RedisNotificationsException("Please use the context manager")
         return self._redis
     
-    def publish(self, room_id: int, message: dict):
+    async def publish(self, room_id: int, message: dict):
         message_json = json.dumps(message)
-        self.redis.publish(f"room:{room_id}", message_json)
+        await self.redis.publish(f"room:{room_id}", message_json)
         
-    def __enter__(self):
+    async def __aenter__(self):
         self._redis = Redis(host=self.host, port=self.port, db=self.db)
         return self
     
-    def __exit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type, exc, tb):
         if self.redis:
-            self.redis.close()
+            await self.redis.close()
         

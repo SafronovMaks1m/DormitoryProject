@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .users import Users
     from .sensors import Sensors
+    from .rooms import Rooms
 
 class SensorViolations(Base):
     __tablename__ = "sensor_violations"
@@ -18,6 +19,7 @@ class SensorViolations(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     sensor_id: Mapped[int] = mapped_column(ForeignKey("sensors.id", ondelete="CASCADE"))
+    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"))
     
     exceeded_value: Mapped[float]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -25,3 +27,4 @@ class SensorViolations(Base):
     
     user: Mapped["Users"] = relationship("Users", back_populates="violations")
     sensor: Mapped["Sensors"] = relationship("Sensors")
+    room: Mapped["Rooms"] = relationship("Rooms")

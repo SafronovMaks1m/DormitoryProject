@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 import jwt, secrets, hashlib
 from src.config import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM
 from fastapi.security import APIKeyCookie
@@ -9,6 +9,7 @@ from src.database.db_depends import get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.sessions import Sessions
 from sqlalchemy import select
+from src.routers.websockets.exceptions import WebSocketTokenExpiredException
 from sqlalchemy.orm import joinedload
 from src.database.connect_db import async_session_maker
 
@@ -47,7 +48,10 @@ async def get_current_session(token: str = Depends(access_token),
         )
     except jwt.PyJWTError as e:
         raise credentials_exception
-    session = await db.scalar(select(Sessions).options(joinedload(Sessions.user)).where(Sessions.id == session_id))
+    session = await db.scalar(select(Sessions)
+                              .options(joinedload(Sessions.user)
+                                       .joinedload(Users.room))
+                              .where(Sessions.id == session_id))
     if session is None or session.revoked or not session.is_active or not session.user.is_active:
         raise credentials_exception
     if not session.user.is_active:
@@ -63,13 +67,28 @@ async def get_current_session_optional(token: str = Depends(access_token), db: A
     except HTTPException:
         return None
 
-async def get_user_for_socket(token: str = Depends(access_token)):
+async def get_user_for_socket(websocket: WebSocket):
     async with async_session_maker() as db:
         try:
+            token = websocket.cookies.get("access_token")
+            if token is None:
+                return None
             session = await get_current_session(token=token, db=db)
             return session.user
-        except HTTPException:
+        except HTTPException as e:
+            if e.detail == "Token has expired": 
+                await websocket.accept()
+                await websocket.close(code=4001, reason="Token expired")
+                raise WebSocketDisconnect()
             return None
+
+async def get_current_student_for_socket(current_user: Users | None = Depends(get_user_for_socket)):
+    """
+    Проверяет, что пользователь имеет роль 'student' в вебсокете.
+    """
+    if current_user is not None and current_user.role == "student":
+        return current_user
+    return None
 
 async def get_current_admin_for_socket(current_user: Users | None = Depends(get_user_for_socket)):
     """

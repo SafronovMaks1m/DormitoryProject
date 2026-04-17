@@ -1,0 +1,2 @@
+class WebSocketTokenExpiredException(Exception):
+    pass

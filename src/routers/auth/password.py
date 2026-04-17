@@ -10,12 +10,13 @@ from src.schemas.UserSchema import UserPasswordSetup
 from src.database.db_depends import get_async_db
 from src.auth.password_hashing import hash_password
 from src.business_logic.sending_token import SendToken
+from src.celery.bg_tasks import send_messages
 from pydantic import EmailStr
 
 router = APIRouter()
 
 @router.get("/setup-password", status_code=status.HTTP_200_OK)
-async def get_setup_password_user(bg: BackgroundTasks,
+async def get_setup_password_user(#bg: BackgroundTasks,
                                 token: str = Query(...), db: AsyncSession = Depends(get_async_db)):
     incoming_hash = hashlib.sha256(token.encode()).hexdigest()
     res = await db.scalar(select(PasswordSetupToken).where(incoming_hash == PasswordSetupToken.hash_token))
@@ -28,13 +29,14 @@ async def get_setup_password_user(bg: BackgroundTasks,
         db_passwod_token = tmp.get("instance")
         db.add(db_passwod_token)
         await db.commit()
-        bg.add_task(SendToken.send_token_email, res.user.email, tmp.get("token"))
+        #bg.add_task(SendToken.send_token_email, res.user.email, tmp.get("token"))
+        send_messages.delay(res.user.email, tmp.get("token"))
         raise HTTPException(status_code=status.HTTP_410_GONE, 
                             detail="The link's lifespan has expired, and a new link has been sent to your email")
     return {"detail": "Okay"}
     
 @router.post("/setup-password", status_code=status.HTTP_200_OK)
-async def post_setup_password_user(user_password: UserPasswordSetup, bg: BackgroundTasks,
+async def post_setup_password_user(user_password: UserPasswordSetup, #bg: BackgroundTasks,
                                    token: str = Query(...), db: AsyncSession = Depends(get_async_db)):
     incoming_hash = hashlib.sha256(token.encode()).hexdigest()
     res = await db.scalar(
@@ -54,7 +56,8 @@ async def post_setup_password_user(user_password: UserPasswordSetup, bg: Backgro
         db_passwod_token = tmp.get("instance")
         db.add(db_passwod_token)
         await db.commit()
-        bg.add_task(SendToken.send_token_email, res.user.email, tmp.get("token"))
+        #bg.add_task(SendToken.send_token_email, res.user.email, tmp.get("token"))
+        send_messages.delay(res.user.email, tmp.get("token"))
         raise HTTPException(status_code=status.HTTP_410_GONE, 
                             detail="The link's lifespan has expired, and a new link has been sent to your email")
     db_user = res.user
@@ -68,7 +71,8 @@ async def post_setup_password_user(user_password: UserPasswordSetup, bg: Backgro
     return {"detail": "The password has been created"}
 
 @router.post("/change-password", status_code=status.HTTP_200_OK)
-async def change_password(bg: BackgroundTasks, email: EmailStr = Body(...), db: AsyncSession = Depends(get_async_db)):
+async def change_password(#bg: BackgroundTasks, 
+                          email: EmailStr = Body(...), db: AsyncSession = Depends(get_async_db)):
     db_user = await db.scalar(select(UsersModel).where(UsersModel.email == email))
     if db_user is None:
         raise HTTPException(
@@ -83,5 +87,6 @@ async def change_password(bg: BackgroundTasks, email: EmailStr = Body(...), db: 
     db.add(db_passwod_token)
     await db.commit()
     await db.refresh(db_user)
-    bg.add_task(SendToken.send_token_email, db_user.email, tmp.get("token"))
+    #bg.add_task(SendToken.send_token_email, db_user.email, tmp.get("token"))
+    send_messages.delay(db_user.email, tmp.get("token"))
     return {"detail": "A link to change your password has been sent to your email"}
