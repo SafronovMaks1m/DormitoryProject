@@ -4,7 +4,7 @@ from src.routers.websockets import wb_endpoints
 from src.routers.violations import vl_endpoints
 
 app = FastAPI(
-    title="website of the hostel",
+    title="website of the obshaga",
     version="0.1.0"
 )
 

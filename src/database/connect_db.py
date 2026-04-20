@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 from src.config import PASSWORD_USER_DB, NAME_DB, NAME_USER
 
 #async
-ASYNC_DATABASE_URL = f"postgresql+asyncpg://{NAME_USER}:{PASSWORD_USER_DB}@localhost:5432/{NAME_DB}"
+ASYNC_DATABASE_URL = f"postgresql+asyncpg://{NAME_USER}:{PASSWORD_USER_DB}@db:5432/{NAME_DB}"
 
 async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=True)
 
@@ -13,10 +13,10 @@ async_session_maker = async_sessionmaker(bind=async_engine, class_=AsyncSession,
 
 #sync
 
-SYNC_DATABASE_URL = f"postgresql+psycopg2://{NAME_USER}:{PASSWORD_USER_DB}@localhost:5432/{NAME_DB}"
+SYNC_DATABASE_URL = f"postgresql+psycopg2://{NAME_USER}:{PASSWORD_USER_DB}@db:5432/{NAME_DB}"
 
-async_engine = create_engine(SYNC_DATABASE_URL, echo=True)
+sync_engine  = create_engine(SYNC_DATABASE_URL, echo=True)
 
-session_maker = sessionmaker(bind=async_engine, expire_on_commit=False)
+session_maker = sessionmaker(bind=sync_engine, expire_on_commit=False)
 class Base(DeclarativeBase):
     pass

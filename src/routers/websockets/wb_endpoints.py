@@ -2,7 +2,6 @@ from fastapi import APIRouter, WebSocket, Depends, status
 from starlette.websockets import WebSocketDisconnect
 from src.models.users import Users
 from src.auth.auth import get_current_student_for_socket, get_current_admin_for_socket
-from src.redis.redis_notifications import RedisNotifications
 from sqlalchemy import select
 from src.models.rooms import Rooms
 from src.database.connect_db import async_session_maker

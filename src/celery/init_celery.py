@@ -3,7 +3,7 @@ from src.celery.bg_tasks import send_messages, send_notifi
 
 celery = Celery(
     "init_celery",
-    broker='amqp://guest:guest@localhost:5672/'
+    broker='amqp://guest:guest@rabbitmq:5672/'
 )
 
 celery.conf.update(

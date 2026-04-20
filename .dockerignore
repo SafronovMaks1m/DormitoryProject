@@ -1,0 +1,29 @@
+.venv/
+
+# Кэш Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Настройки VS Code или других редакторов
+.vscode/
+.idea/
+
+# Файлы окружения
+.env
+.env.*
+
+# Логи и временные файлы
+*.log
+.pytest_cache/
+.coverage
+
+# Docker файлы
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Git
+.git/
+.gitignore

@@ -18,7 +18,7 @@ from src import models
 
 config = context.config
 
-DATABASE_URL = f"postgresql+asyncpg://{NAME_USER}:{PASSWORD_USER_DB}@localhost:5432/{NAME_DB}"
+DATABASE_URL = f"postgresql+asyncpg://{NAME_USER}:{PASSWORD_USER_DB}@db:5432/{NAME_DB}"
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 if config.config_file_name is not None:
